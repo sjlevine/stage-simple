@@ -18,9 +18,19 @@
 #define PIPE_TO_LIGHTS   0xF0F0F0F0E1LL
 #define PIPE_FROM_LIGHTS 0xF0F0F0F0D2LL
 
+const char alphabet[17] = "0123456789ABCDEF";
+
+// Protocol constants
+#define SYNC_BYTE 0x61
+
 
 // Set up an RF24 radio. Make sure you have the library installed!
 RF24 radio(CE_PIN, CSN_PIN);
+
+// Buffer to store data
+uint8_t buffer[PAYLOAD_SIZE];
+
+uint8_t status = 0;
 
 /*
  Configure the nRF24L01+ to do our bidding
@@ -79,11 +89,31 @@ void setup() {
   
   // Set up a status LED pin
   pinMode(STATUS_LED_PIN, OUTPUT);
+  
+  
+  Serial.begin(115200);
+  
+  Serial.println("Hi Victor!");
 }
 
-
+void printHex(uint8_t val) {
+  Serial.print(alphabet[(val >> 4) & 0x0F]);
+  Serial.print(alphabet[val & 0x0F]);
+  Serial.print(" ");
+}
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+  // Is data available?
+  if (radio.available()) { // TODO while look to keep reading??
+    radio.read(buffer, PAYLOAD_SIZE);
+    
+    // Toggle the light
+    Serial.print("Got: ");
+    printHex(buffer[0]);
+    printHex(buffer[1]);
+    printHex(buffer[2]);
+    printHex(buffer[3]);
+    printHex(buffer[4]);
+    Serial.print("\n");
+  }
 }
