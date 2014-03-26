@@ -13,13 +13,22 @@
 #define CE_PIN 9
 #define PAYLOAD_SIZE 5
 
+#define STATUS_LED_PIN 13
+
+#define PIPE_TO_LIGHTS   0xF0F0F0F0E1LL
+#define PIPE_FROM_LIGHTS 0xF0F0F0F0D2LL
+
+
 // Set up an RF24 radio. Make sure you have the library installed!
 RF24 radio(CE_PIN, CSN_PIN);
 
 /*
  Configure the nRF24L01+ to do our bidding
 */
-void setup_nrf() {  
+void setup_nrf() {
+  // Set up some defaults  
+  radio.begin();
+  
   // Set the 2.4 GHz channel
   radio.setChannel(76); // This is supposedely a good choice
   
@@ -42,16 +51,34 @@ void setup_nrf() {
   
   // Number of retries. Are these used if acks are off (?)
   radio.setRetries(10, 15);
-
-  // Begin
   
+}
+
+void setup_receiving() {
+  // Should only be called in the receiver - i.e., the lights, not in the transmitter
+  radio.openWritingPipe(PIPE_FROM_LIGHTS);
+  radio.openReadingPipe(1, PIPE_TO_LIGHTS);
+  // Start listening
+  radio.startListening();
+}
+
+void setup_transmitting() {
+  // Should only be called in the receiver - i.e., the lights, not in the transmitter
+  radio.openWritingPipe(PIPE_TO_LIGHTS);
+  radio.openReadingPipe(1, PIPE_FROM_LIGHTS);
+  // Start listening
+  //radio.startListening();
 }
 
 void setup() {
   // Set up the nRF
   setup_nrf();
   
-
+  // Set up pipes for the receiver
+  setup_receiving();
+  
+  // Set up a status LED pin
+  pinMode(STATUS_LED_PIN, OUTPUT);
 }
 
 
